@@ -1,0 +1,8 @@
+{
+    "display_name": "Alibi Eldritch Decoder",
+    "version": "1.0.0",
+    "js": "index.js",
+    "css": "style.css",
+    "author": "you",
+    "description": "Scramble-to-English animation for text inside 「」 brackets."
+}
