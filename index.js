@@ -152,9 +152,23 @@
     }
 
     // ── Watch for new messages and content changes ──────────────────────────
+
+    // Guard: during initial chat load, skip processing old messages
+    let initialLoadComplete = false;
+
+    // Silently mark a message as "already handled" so it never animates
+    function skipMessage(mesText) {
+        if (mesText && !mesText.dataset.alibiDone) {
+            mesText.dataset.alibiDone = '1';
+        }
+    }
+
     function watch() {
         const chat = document.getElementById('chat');
         if (!chat) { setTimeout(watch, 800); return; }
+
+        // Mark all messages already in the DOM as done (no animation)
+        document.querySelectorAll('.mes_text').forEach(mt => skipMessage(mt));
 
         // Observe both new messages AND content changes within messages
         const observer = new MutationObserver(mutations => {
@@ -164,25 +178,28 @@
                     for (const node of m.addedNodes) {
                         if (node.nodeType !== 1) continue;
 
-                        // New message added
+                        let mt = null;
                         if (node.classList.contains('mes')) {
-                            const mt = node.querySelector('.mes_text');
-                            if (mt) processMessage(mt);
+                            mt = node.querySelector('.mes_text');
+                        } else if (node.classList.contains('mes_text')) {
+                            mt = node;
+                        } else {
+                            mt = node.closest('.mes_text') || node.querySelector('.mes_text');
                         }
-                        // Or if the node itself is mes_text (rare but possible)
-                        else if (node.classList.contains('mes_text')) {
-                            processMessage(node);
-                        }
-                        // Or if content was added deep inside a message
-                        else {
-                            const mt = node.closest('.mes_text') || node.querySelector('.mes_text');
-                            if (mt) processMessage(mt);
+
+                        if (!mt) continue;
+
+                        if (!initialLoadComplete) {
+                            // Still loading old messages — skip them silently
+                            skipMessage(mt);
+                        } else {
+                            processMessage(mt);
                         }
                     }
                 }
 
-                // Handle text content changes (for streaming)
-                if (m.type === 'characterData' || m.type === 'childList') {
+                // Handle text content changes (for streaming) — only after initial load
+                if (initialLoadComplete && (m.type === 'characterData' || m.type === 'childList')) {
                     const mt = m.target.nodeType === 1
                         ? (m.target.closest('.mes_text') || m.target.querySelector('.mes_text'))
                         : m.target.parentElement?.closest('.mes_text');
@@ -198,13 +215,22 @@
             characterData: true
         });
 
-        // Initial sweep: only process the LATEST message on startup
-        const messages = document.querySelectorAll('.mes_text');
-        if (messages.length > 0) {
-            processMessage(messages[messages.length - 1]);
-        }
+        // After a grace period, consider initial load done.
+        // Then animate only the very last message.
+        setTimeout(() => {
+            initialLoadComplete = true;
 
-        console.log('[alibi-eldritch] ✓ active (robust mode)');
+            // Now animate the latest message only
+            const allMessages = document.querySelectorAll('.mes_text');
+            if (allMessages.length > 0) {
+                const last = allMessages[allMessages.length - 1];
+                // Reset alibiDone so processMessage will pick it up
+                delete last.dataset.alibiDone;
+                processMessage(last);
+            }
+
+            console.log('[alibi-eldritch] ✓ active (initial load complete, processing new messages only)');
+        }, 3000); // 3-second grace period for SillyTavern to finish loading chat
     }
 
     document.readyState === 'loading'
