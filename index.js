@@ -8,13 +8,13 @@
     // ── Eldritch character pool ──────────────────────────────────────────────
     // Runic + archaic Unicode blocks chosen for visual "wrongness"
     const ELDRITCH = [
-        'ᚠ','ᚡ','ᚢ','ᚣ','ᚤ','ᚥ','ᚦ','ᚧ','ᚨ','ᚩ','ᚪ','ᚫ','ᚬ','ᚭ','ᚮ','ᚯ',
-        'ᚰ','ᚱ','ᚲ','ᚳ','ᚴ','ᚵ','ᚶ','ᚷ','ᚸ','ᚹ','ᚺ','ᚻ','ᚼ','ᚽ','ᚾ','ᚿ',
-        'ᛀ','ᛁ','ᛂ','ᛃ','ᛄ','ᛅ','ᛆ','ᛇ','ᛈ','ᛉ','ᛊ','ᛋ','ᛌ','ᛍ','ᛎ','ᛏ',
-        'ᛐ','ᛑ','ᛒ','ᛓ','ᛔ','ᛕ','ᛖ','ᛗ','ᛘ','ᛙ','ᛚ','ᛛ','ᛜ','ᛝ','ᛞ','ᛟ',
-        'ᛠ','ᛡ','ᛪ','꒐','꒑','꒒','꒓','꒔','꒕','꒖','꒗','꒘','꒙','꒚','꒛',
-        '꒜','꒝','꒞','꒟','꒠','꒡','꒢','꒣','꒤','꒥','꒦','꒧','꒨','꒩','꒪',
-        '꒫','꒬','꒭','꒮','꒯'
+        'ᚠ', 'ᚡ', 'ᚢ', 'ᚣ', 'ᚤ', 'ᚥ', 'ᚦ', 'ᚧ', 'ᚨ', 'ᚩ', 'ᚪ', 'ᚫ', 'ᚬ', 'ᚭ', 'ᚮ', 'ᚯ',
+        'ᚰ', 'ᚱ', 'ᚲ', 'ᚳ', 'ᚴ', 'ᚵ', 'ᚶ', 'ᚷ', 'ᚸ', 'ᚹ', 'ᚺ', 'ᚻ', 'ᚼ', 'ᚽ', 'ᚾ', 'ᚿ',
+        'ᛀ', 'ᛁ', 'ᛂ', 'ᛃ', 'ᛄ', 'ᛅ', 'ᛆ', 'ᛇ', 'ᛈ', 'ᛉ', 'ᛊ', 'ᛋ', 'ᛌ', 'ᛍ', 'ᛎ', 'ᛏ',
+        'ᛐ', 'ᛑ', 'ᛒ', 'ᛓ', 'ᛔ', 'ᛕ', 'ᛖ', 'ᛗ', 'ᛘ', 'ᛙ', 'ᛚ', 'ᛛ', 'ᛜ', 'ᛝ', 'ᛞ', 'ᛟ',
+        'ᛠ', 'ᛡ', 'ᛪ', '꒐', '꒑', '꒒', '꒓', '꒔', '꒕', '꒖', '꒗', '꒘', '꒙', '꒚', '꒛',
+        '꒜', '꒝', '꒞', '꒟', '꒠', '꒡', '꒢', '꒣', '꒤', '꒥', '꒦', '꒧', '꒨', '꒩', '꒪',
+        '꒫', '꒬', '꒭', '꒮', '꒯'
     ];
 
     function randChar() {
@@ -38,7 +38,7 @@
     function scramble(el, text) {
         const chars = [...text]; // spread handles multi-byte unicode safely
         let frame = 0;
-        let live  = true;
+        let live = true;
 
         // Each character gets a window: [start frame → end frame]
         // start is staggered left-to-right so decoding flows horizontally
@@ -47,7 +47,7 @@
                 return { char, start: 0, end: 0, current: char };
             }
             const start = Math.floor(i * 0.55);
-            const end   = start + Math.floor(Math.random() * 20) + 10;
+            const end = start + Math.floor(Math.random() * 20) + 10;
             return { char, start, end, current: randChar() };
         });
 
@@ -107,7 +107,7 @@
 
         const timer = setTimeout(() => {
             settleTimers.delete(mesText);
-            
+
             // Re-check for done and content
             if (mesText.dataset.alibiDone) return;
             const original = mesText.innerHTML;
@@ -130,8 +130,8 @@
                 const id = 'al-' + Math.random().toString(36).slice(2, 10);
 
                 return `<span class="alibi-bracket">「</span>`
-                     + `<span class="alibi-text" id="${id}" data-t="${encodeURIComponent(plain)}"></span>`
-                     + `<span class="alibi-bracket">」</span>`;
+                    + `<span class="alibi-text" id="${id}" data-t="${encodeURIComponent(plain)}"></span>`
+                    + `<span class="alibi-bracket">」</span>`;
             });
 
             if (replaced === original) {
@@ -163,12 +163,12 @@
                 if (m.addedNodes.length) {
                     for (const node of m.addedNodes) {
                         if (node.nodeType !== 1) continue;
-                        
+
                         // New message added
                         if (node.classList.contains('mes')) {
                             const mt = node.querySelector('.mes_text');
                             if (mt) processMessage(mt);
-                        } 
+                        }
                         // Or if the node itself is mes_text (rare but possible)
                         else if (node.classList.contains('mes_text')) {
                             processMessage(node);
@@ -180,26 +180,29 @@
                         }
                     }
                 }
-                
+
                 // Handle text content changes (for streaming)
                 if (m.type === 'characterData' || m.type === 'childList') {
-                    const mt = m.target.nodeType === 1 
+                    const mt = m.target.nodeType === 1
                         ? (m.target.closest('.mes_text') || m.target.querySelector('.mes_text'))
                         : m.target.parentElement?.closest('.mes_text');
-                    
+
                     if (mt) processMessage(mt);
                 }
             }
         });
 
-        observer.observe(chat, { 
-            childList: true, 
-            subtree: true, 
-            characterData: true 
+        observer.observe(chat, {
+            childList: true,
+            subtree: true,
+            characterData: true
         });
 
-        // Initial sweep for existing messages
-        document.querySelectorAll('.mes_text').forEach(mt => processMessage(mt));
+        // Initial sweep: only process the LATEST message on startup
+        const messages = document.querySelectorAll('.mes_text');
+        if (messages.length > 0) {
+            processMessage(messages[messages.length - 1]);
+        }
 
         console.log('[alibi-eldritch] ✓ active (robust mode)');
     }
