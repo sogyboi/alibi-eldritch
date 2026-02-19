@@ -1,3 +1,55 @@
+/* ── Decode button ── */
+.alibi-decode-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    margin-right: 4px;
+    border: 1px solid #7c3aed;
+    border-radius: 4px;
+    background: rgba(124, 58, 237, 0.15);
+    color: #a78bfa;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    vertical-align: middle;
+    transition: all 0.2s ease;
+}
+
+.alibi-decode-btn:hover {
+    background: rgba(124, 58, 237, 0.4);
+    color: #c4b5fd;
+    box-shadow: 0 0 8px rgba(124, 58, 237, 0.5);
+}
+
+.alibi-decode-btn:active {
+    transform: scale(0.9);
+}
+
+/* Hide button after click */
+.alibi-btn-used {
+    opacity: 0;
+    width: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+/* Wrapper to keep button + text inline */
+.alibi-wrapper {
+    display: inline;
+}
+
+/* Scrambled text before decode (static) */
+.alibi-scrambled {
+    color: #4c1d95;
+    opacity: 0.7;
+}
+
 /* Characters actively scrambling */
 .alibi-scrambling {
     color: #7c3aed;
@@ -5,21 +57,32 @@
     letter-spacing: 0.02em;
 }
 
-/* Characters not yet reached — the leading edge of the effect */
+/* Characters not yet reached */
 .alibi-pending {
     color: #4c1d95;
     opacity: 0.5;
 }
 
-/* The flash as each character resolves into English */
+/* The flash as each character resolves */
 .alibi-resolved {
     animation: alibi-snap 0.38s ease-out forwards;
 }
 
 @keyframes alibi-snap {
-    0%   { color: #a78bfa; text-shadow: 0 0 10px #7c3aed, 0 0 20px #4c1d95; }
-    45%  { color: #c4b5fd; text-shadow: 0 0 4px #7c3aed; }
-    100% { color: inherit;  text-shadow: none; }
+    0% {
+        color: #a78bfa;
+        text-shadow: 0 0 10px #7c3aed, 0 0 20px #4c1d95;
+    }
+
+    45% {
+        color: #c4b5fd;
+        text-shadow: 0 0 4px #7c3aed;
+    }
+
+    100% {
+        color: inherit;
+        text-shadow: none;
+    }
 }
 
 /* The 「 」 bracket glyphs */
