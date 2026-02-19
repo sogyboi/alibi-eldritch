@@ -31,6 +31,28 @@
         return c;
     }
 
+    // ── Persistence (localStorage) ───────────────────────────────────────────
+    const STORAGE_KEY = 'alibi-decoded';
+
+    function getDecoded() {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        } catch { return {}; }
+    }
+
+    function markDecoded(key) {
+        const data = getDecoded();
+        data[key] = 1;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    // Build a stable key for a 「」 block: mesid + block index within that message
+    function blockKey(mesText, blockIndex) {
+        const mes = mesText.closest('.mes');
+        const mesId = mes?.getAttribute('mesid') || mes?.dataset.mesid || mes?.id || '??';
+        return mesId + ':' + blockIndex;
+    }
+
     // ── Core animation ───────────────────────────────────────────────────────
     function scramble(el, text) {
         const chars = [...text];
@@ -96,16 +118,28 @@
         if (!original.includes('「')) return;
 
         mesText.dataset.alibiProcessed = '1';
+        const decoded = getDecoded();
+        let blockIndex = 0;
 
         const replaced = original.replace(/「([^」]*)」/g, (_, inner) => {
             const tmp = document.createElement('div');
             tmp.innerHTML = inner;
             const plain = tmp.textContent || '';
             const id = 'al-' + Math.random().toString(36).slice(2, 10);
-            const preview = scrambledPreview(plain);
+            const key = blockKey(mesText, blockIndex++);
 
+            // If already decoded in a previous session, show plain text
+            if (decoded[key]) {
+                return `<span class="alibi-wrapper">`
+                    + `<span class="alibi-bracket">「</span>`
+                    + `<span class="alibi-text alibi-done" id="${id}">${plain}</span>`
+                    + `<span class="alibi-bracket">」</span>`
+                    + `</span>`;
+            }
+
+            const preview = scrambledPreview(plain);
             return `<span class="alibi-wrapper">`
-                + `<button class="alibi-decode-btn" data-target="${id}" title="Decode eldritch text">⦻</button>`
+                + `<button class="alibi-decode-btn" data-target="${id}" data-key="${key}" title="Decode eldritch text">⦻</button>`
                 + `<span class="alibi-bracket">「</span>`
                 + `<span class="alibi-text alibi-scrambled" id="${id}" data-t="${encodeURIComponent(plain)}">${preview}</span>`
                 + `<span class="alibi-bracket">」</span>`
@@ -134,6 +168,10 @@
 
         // Hide the button after clicking
         btn.classList.add('alibi-btn-used');
+
+        // Save to localStorage so it stays decoded on refresh
+        const key = btn.getAttribute('data-key');
+        if (key) markDecoded(key);
 
         const text = decodeURIComponent(span.getAttribute('data-t'));
         span.classList.remove('alibi-scrambled');
