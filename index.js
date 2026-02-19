@@ -151,86 +151,87 @@
         settleTimers.set(mesText, timer);
     }
 
-    // ── Watch for new messages and content changes ──────────────────────────
+    // ── Watch for new messages ────────────────────────────────────────────────
 
-    // Guard: during initial chat load, skip processing old messages
-    let initialLoadComplete = false;
+    // Track which message IDs we've already seen so we never re-process them
+    const knownMessageIds = new Set();
 
-    // Silently mark a message as "already handled" so it never animates
-    function skipMessage(mesText) {
-        if (mesText && !mesText.dataset.alibiDone) {
-            mesText.dataset.alibiDone = '1';
-        }
+    // Record every message currently in the DOM as "known" (won't be animated)
+    function snapshotExisting() {
+        document.querySelectorAll('#chat > .mes').forEach(mes => {
+            const id = mes.getAttribute('mesid') || mes.dataset.mesid || mes.id || null;
+            if (id) knownMessageIds.add(id);
+            // Also mark the text element so processMessage won't touch it
+            const mt = mes.querySelector('.mes_text');
+            if (mt) mt.dataset.alibiDone = '1';
+        });
+    }
+
+    // For a genuinely new message, watch its .mes_text for streaming updates
+    function watchMessageForStreaming(mesText) {
+        const streamObs = new MutationObserver(() => {
+            // Re-process whenever content changes (debounced inside processMessage)
+            if (mesText.dataset.alibiDone) return;
+            processMessage(mesText);
+        });
+        streamObs.observe(mesText, { childList: true, characterData: true, subtree: true });
+
+        // Auto-disconnect after 60s to avoid leaks on long sessions
+        setTimeout(() => streamObs.disconnect(), 60000);
     }
 
     function watch() {
         const chat = document.getElementById('chat');
         if (!chat) { setTimeout(watch, 800); return; }
 
-        // Mark all messages already in the DOM as done (no animation)
-        document.querySelectorAll('.mes_text').forEach(mt => skipMessage(mt));
+        // Snapshot everything currently loaded
+        snapshotExisting();
 
-        // Observe both new messages AND content changes within messages
+        // Main observer: ONLY watch direct children of #chat (no subtree!)
+        // This fires once per new .mes div, not for every tiny DOM change inside messages
         const observer = new MutationObserver(mutations => {
             for (const m of mutations) {
-                // Handle new nodes
-                if (m.addedNodes.length) {
-                    for (const node of m.addedNodes) {
-                        if (node.nodeType !== 1) continue;
+                if (!m.addedNodes.length) continue;
+                for (const node of m.addedNodes) {
+                    if (node.nodeType !== 1 || !node.classList.contains('mes')) continue;
 
-                        let mt = null;
-                        if (node.classList.contains('mes')) {
-                            mt = node.querySelector('.mes_text');
-                        } else if (node.classList.contains('mes_text')) {
-                            mt = node;
-                        } else {
-                            mt = node.closest('.mes_text') || node.querySelector('.mes_text');
-                        }
+                    const id = node.getAttribute('mesid') || node.dataset.mesid || node.id || null;
 
-                        if (!mt) continue;
+                    // If we've seen this message before (old message re-added), skip it
+                    if (id && knownMessageIds.has(id)) {
+                        const mt = node.querySelector('.mes_text');
+                        if (mt) mt.dataset.alibiDone = '1';
+                        continue;
+                    }
 
-                        if (!initialLoadComplete) {
-                            // Still loading old messages — skip them silently
-                            skipMessage(mt);
-                        } else {
-                            processMessage(mt);
-                        }
+                    // Record this as a known message
+                    if (id) knownMessageIds.add(id);
+
+                    const mt = node.querySelector('.mes_text');
+                    if (mt) {
+                        processMessage(mt);
+                        watchMessageForStreaming(mt);
                     }
                 }
+            }
+        });
 
-                // Handle text content changes (for streaming) — only after initial load
-                if (initialLoadComplete && (m.type === 'characterData' || m.type === 'childList')) {
-                    const mt = m.target.nodeType === 1
-                        ? (m.target.closest('.mes_text') || m.target.querySelector('.mes_text'))
-                        : m.target.parentElement?.closest('.mes_text');
+        observer.observe(chat, { childList: true, subtree: false });
 
-                    if (mt) processMessage(mt);
+        // Animate only the very last message on startup (after a short delay
+        // to let SillyTavern finish rendering its content)
+        setTimeout(() => {
+            const allMessages = document.querySelectorAll('#chat > .mes');
+            if (allMessages.length > 0) {
+                const lastMes = allMessages[allMessages.length - 1];
+                const mt = lastMes.querySelector('.mes_text');
+                if (mt) {
+                    delete mt.dataset.alibiDone;
+                    processMessage(mt);
                 }
             }
-        });
-
-        observer.observe(chat, {
-            childList: true,
-            subtree: true,
-            characterData: true
-        });
-
-        // After a grace period, consider initial load done.
-        // Then animate only the very last message.
-        setTimeout(() => {
-            initialLoadComplete = true;
-
-            // Now animate the latest message only
-            const allMessages = document.querySelectorAll('.mes_text');
-            if (allMessages.length > 0) {
-                const last = allMessages[allMessages.length - 1];
-                // Reset alibiDone so processMessage will pick it up
-                delete last.dataset.alibiDone;
-                processMessage(last);
-            }
-
-            console.log('[alibi-eldritch] ✓ active (initial load complete, processing new messages only)');
-        }, 3000); // 3-second grace period for SillyTavern to finish loading chat
+            console.log('[alibi-eldritch] ✓ active (processing new messages only)');
+        }, 2000);
     }
 
     document.readyState === 'loading'
