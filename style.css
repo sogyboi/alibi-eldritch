@@ -68,6 +68,11 @@
     animation: alibi-snap 0.38s ease-out forwards;
 }
 
+/* Disable glow when setting is off */
+.alibi-resolved.alibi-no-glow {
+    animation: alibi-snap-flat 0.38s ease-out forwards;
+}
+
 @keyframes alibi-snap {
     0% {
         color: #a78bfa;
@@ -85,9 +90,46 @@
     }
 }
 
+@keyframes alibi-snap-flat {
+    0% {
+        color: #a78bfa;
+    }
+
+    45% {
+        color: #c4b5fd;
+    }
+
+    100% {
+        color: inherit;
+    }
+}
+
 /* The 「 」 bracket glyphs */
 .alibi-bracket {
     color: #6d28d9;
     opacity: 0.6;
     user-select: none;
+}
+
+/* Debug key labels */
+.alibi-key-label {
+    font-size: 10px;
+    color: #6b7280;
+    opacity: 0.6;
+    margin-right: 2px;
+    font-family: monospace;
+    vertical-align: middle;
+}
+
+/* ── Settings panel styles ── */
+.alibi-ext_block {
+    margin-bottom: 8px;
+}
+
+.alibi-ext_block label {
+    margin-left: 4px;
+}
+
+.alibi-ext_block .neo-range-slider {
+    width: 100%;
 }

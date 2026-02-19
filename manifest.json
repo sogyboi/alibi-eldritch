@@ -1,8 +1,11 @@
 {
     "display_name": "Alibi Eldritch Decoder",
-    "version": "1.0.0",
+    "loading_order": 10,
+    "requires": [],
+    "optional": [],
     "js": "index.js",
     "css": "style.css",
+    "version": "2.0.0",
     "author": "you",
-    "description": "Scramble-to-English animation for text inside 「」 brackets."
+    "description": "Scramble-to-English animation for text inside 「」 brackets with click-to-decode and settings panel."
 }

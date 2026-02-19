@@ -1,0 +1,65 @@
+<div class="alibi-eldritch-settings">
+    <div class="inline-drawer">
+        <div class="inline-drawer-toggle inline-drawer-header">
+            <b>Alibi Eldritch Decoder</b>
+            <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+        </div>
+        <div class="inline-drawer-content">
+
+            <!-- Action Buttons -->
+            <div class="alibi-ext_block flex-container">
+                <input id="alibi_decode_all" class="menu_button" type="submit" value="🔓 Decode All" title="Instantly decode every block in chat" />
+                <input id="alibi_rescramble_all" class="menu_button" type="submit" value="🔒 Re-scramble All" title="Reset all blocks to scrambled" />
+                <input id="alibi_clear_state" class="menu_button" type="submit" value="🗑️ Clear Saved" title="Wipe decode memory (localStorage)" />
+            </div>
+
+            <hr class="sysHR" />
+
+            <!-- Animation Speed -->
+            <div class="alibi-ext_block">
+                <label for="alibi_speed">Animation Speed: <span id="alibi_speed_value">1.0x</span></label>
+                <input id="alibi_speed" type="range" min="0.5" max="3" step="0.25" value="1" class="neo-range-slider" />
+            </div>
+
+            <!-- Button Symbol -->
+            <div class="alibi-ext_block">
+                <label for="alibi_symbol">Decode Button Symbol</label>
+                <select id="alibi_symbol" class="text_pole">
+                    <option value="⦻">⦻ (default)</option>
+                    <option value="ᛝ">ᛝ (rune)</option>
+                    <option value="☽">☽ (moon)</option>
+                    <option value="⍟">⍟ (star)</option>
+                    <option value="ᚦ">ᚦ (thorn)</option>
+                </select>
+            </div>
+
+            <hr class="sysHR" />
+
+            <!-- Toggles -->
+            <div class="alibi-ext_block flex-container">
+                <input id="alibi_glow" type="checkbox" checked />
+                <label for="alibi_glow">Eldritch Glow Effect</label>
+            </div>
+
+            <div class="alibi-ext_block flex-container">
+                <input id="alibi_auto_decode" type="checkbox" />
+                <label for="alibi_auto_decode">Auto-decode New Messages</label>
+            </div>
+
+            <hr class="sysHR" />
+
+            <!-- Debug -->
+            <div class="alibi-ext_block flex-container">
+                <input id="alibi_debug_log" type="checkbox" />
+                <label for="alibi_debug_log">Debug Logging</label>
+            </div>
+
+            <div class="alibi-ext_block flex-container">
+                <input id="alibi_show_keys" type="checkbox" />
+                <label for="alibi_show_keys">Show Block Keys</label>
+            </div>
+
+            <hr class="sysHR" />
+        </div>
+    </div>
+</div>
