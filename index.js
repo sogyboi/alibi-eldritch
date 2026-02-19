@@ -95,57 +95,113 @@
     }
 
     // ── Process a single message's .mes_text element ─────────────────────────
+    const settleTimers = new Map();
+
     function processMessage(mesText) {
         if (!mesText || mesText.dataset.alibiDone) return;
 
-        const original = mesText.innerHTML;
-        if (!original.includes('「')) return;
+        // Use a "settle" debounce to wait for streaming to stop
+        if (settleTimers.has(mesText)) {
+            clearTimeout(settleTimers.get(mesText));
+        }
 
-        mesText.dataset.alibiDone = '1';
+        const timer = setTimeout(() => {
+            settleTimers.delete(mesText);
+            
+            // Re-check for done and content
+            if (mesText.dataset.alibiDone) return;
+            const original = mesText.innerHTML;
+            if (!original.includes('「')) return;
 
-        // Replace every 「...」 block with a bracket span + empty target span
-        const replaced = original.replace(/「([^」]*)」/g, (_, inner) => {
-            // Strip any stray HTML tags SillyTavern may have added inside
-            const tmp   = document.createElement('div');
-            tmp.innerHTML = inner;
-            const plain = tmp.textContent || '';
+            // Optional: Skip if still streaming (common SillyTavern classes)
+            const mes = mesText.closest('.mes');
+            if (mes && (mes.classList.contains('streaming') || mes.querySelector('.typing-indicator'))) {
+                processMessage(mesText); // Check again later
+                return;
+            }
 
-            const id = 'al-' + Math.random().toString(36).slice(2, 10);
+            mesText.dataset.alibiDone = '1';
 
-            return `<span class="alibi-bracket">「</span>`
-                 + `<span class="alibi-text" id="${id}" data-t="${encodeURIComponent(plain)}"></span>`
-                 + `<span class="alibi-bracket">」</span>`;
-        });
+            // Replace every 「...」 block with a bracket span + empty target span
+            const replaced = original.replace(/「([^」]*)」/g, (_, inner) => {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = inner;
+                const plain = tmp.textContent || '';
+                const id = 'al-' + Math.random().toString(36).slice(2, 10);
 
-        if (replaced === original) return;
+                return `<span class="alibi-bracket">「</span>`
+                     + `<span class="alibi-text" id="${id}" data-t="${encodeURIComponent(plain)}"></span>`
+                     + `<span class="alibi-bracket">」</span>`;
+            });
 
-        mesText.innerHTML = replaced;
+            if (replaced === original) {
+                delete mesText.dataset.alibiDone;
+                return;
+            }
 
-        // Fire each 「」 block in sequence with a short stagger
-        mesText.querySelectorAll('.alibi-text[data-t]').forEach((span, i) => {
-            const text = decodeURIComponent(span.getAttribute('data-t'));
-            setTimeout(() => scramble(span, text), i * 280 + 380);
-        });
+            mesText.innerHTML = replaced;
+
+            // Fire each 「」 block in sequence
+            mesText.querySelectorAll('.alibi-text[data-t]').forEach((span, i) => {
+                const text = decodeURIComponent(span.getAttribute('data-t'));
+                setTimeout(() => scramble(span, text), i * 280 + 380);
+            });
+        }, 400); // 400ms settle time
+
+        settleTimers.set(mesText, timer);
     }
 
-    // ── Watch for new messages ────────────────────────────────────────────────
+    // ── Watch for new messages and content changes ──────────────────────────
     function watch() {
         const chat = document.getElementById('chat');
         if (!chat) { setTimeout(watch, 800); return; }
 
-        new MutationObserver(mutations => {
+        // Observe both new messages AND content changes within messages
+        const observer = new MutationObserver(mutations => {
             for (const m of mutations) {
-                for (const node of m.addedNodes) {
-                    if (node.nodeType !== 1)                  continue;
-                    if (!node.classList.contains('mes'))      continue;
-
-                    const mt = node.querySelector('.mes_text');
-                    if (mt) setTimeout(() => processMessage(mt), 120);
+                // Handle new nodes
+                if (m.addedNodes.length) {
+                    for (const node of m.addedNodes) {
+                        if (node.nodeType !== 1) continue;
+                        
+                        // New message added
+                        if (node.classList.contains('mes')) {
+                            const mt = node.querySelector('.mes_text');
+                            if (mt) processMessage(mt);
+                        } 
+                        // Or if the node itself is mes_text (rare but possible)
+                        else if (node.classList.contains('mes_text')) {
+                            processMessage(node);
+                        }
+                        // Or if content was added deep inside a message
+                        else {
+                            const mt = node.closest('.mes_text') || node.querySelector('.mes_text');
+                            if (mt) processMessage(mt);
+                        }
+                    }
+                }
+                
+                // Handle text content changes (for streaming)
+                if (m.type === 'characterData' || m.type === 'childList') {
+                    const mt = m.target.nodeType === 1 
+                        ? (m.target.closest('.mes_text') || m.target.querySelector('.mes_text'))
+                        : m.target.parentElement?.closest('.mes_text');
+                    
+                    if (mt) processMessage(mt);
                 }
             }
-        }).observe(chat, { childList: true });
+        });
 
-        console.log('[alibi-eldritch] ✓ active');
+        observer.observe(chat, { 
+            childList: true, 
+            subtree: true, 
+            characterData: true 
+        });
+
+        // Initial sweep for existing messages
+        document.querySelectorAll('.mes_text').forEach(mt => processMessage(mt));
+
+        console.log('[alibi-eldritch] ✓ active (robust mode)');
     }
 
     document.readyState === 'loading'
