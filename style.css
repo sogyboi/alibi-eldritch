@@ -1,0 +1,30 @@
+/* Characters actively scrambling */
+.alibi-scrambling {
+    color: #7c3aed;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+}
+
+/* Characters not yet reached — the leading edge of the effect */
+.alibi-pending {
+    color: #4c1d95;
+    opacity: 0.5;
+}
+
+/* The flash as each character resolves into English */
+.alibi-resolved {
+    animation: alibi-snap 0.38s ease-out forwards;
+}
+
+@keyframes alibi-snap {
+    0%   { color: #a78bfa; text-shadow: 0 0 10px #7c3aed, 0 0 20px #4c1d95; }
+    45%  { color: #c4b5fd; text-shadow: 0 0 4px #7c3aed; }
+    100% { color: inherit;  text-shadow: none; }
+}
+
+/* The 「 」 bracket glyphs */
+.alibi-bracket {
+    color: #6d28d9;
+    opacity: 0.6;
+    user-select: none;
+}
