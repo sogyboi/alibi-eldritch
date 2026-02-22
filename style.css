@@ -28,15 +28,22 @@
     transform: scale(0.9);
 }
 
-/* Hide button after click */
+/* Button state when decoded */
+.alibi-btn-decoded {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+}
+
+.alibi-btn-decoded:hover {
+    background: rgba(16, 185, 129, 0.4);
+    color: #6ee7b7;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+/* Redundant hiding logic removed - button now toggles instead */
 .alibi-btn-used {
-    opacity: 0;
-    width: 0;
-    margin: 0;
-    padding: 0;
-    border: none;
-    pointer-events: none;
-    transition: all 0.3s ease;
+    display: none;
 }
 
 /* Wrapper to keep button + text inline */

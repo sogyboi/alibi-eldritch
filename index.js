@@ -73,6 +73,13 @@ function getDecoded() {
     } catch { return {}; }
 }
 
+function unmarkDecoded(key) {
+    const data = getDecoded();
+    delete data[key];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    debugLog('Cleared decoded key:', key);
+}
+
 function markDecoded(key) {
     const data = getDecoded();
     data[key] = 1;
@@ -173,13 +180,14 @@ function injectButtons(mesText) {
         const key = blockKey(mesText, blockIndex++);
         const keyLabel = settings.showKeys ? `<span class="alibi-key-label">[${key}]</span>` : '';
 
-        // If already decoded in a previous session, show plain text
+        // If already decoded in a previous session, show plain text but STILL SHOW BUTTON
         if (decoded[key]) {
-            debugLog('Already decoded:', key);
+            debugLog('Already decoded (but keeping button):', key);
             return `<span class="alibi-wrapper">`
+                + `<button class="alibi-decode-btn alibi-btn-decoded" data-target="${id}" data-key="${key}" title="Toggle eldritch text">${settings.buttonSymbol}</button>`
                 + keyLabel
                 + `<span class="alibi-bracket">「</span>`
-                + `<span class="alibi-text alibi-done" id="${id}">${plain}</span>`
+                + `<span class="alibi-text alibi-done" id="${id}" data-t="${encodeURIComponent(plain)}">${plain}</span>`
                 + `<span class="alibi-bracket">」</span>`
                 + `</span>`;
         }
@@ -189,6 +197,7 @@ function injectButtons(mesText) {
             markDecoded(key);
             debugLog('Auto-decoding:', key);
             return `<span class="alibi-wrapper">`
+                + `<button class="alibi-decode-btn alibi-btn-decoded" data-target="${id}" data-key="${key}" title="Toggle eldritch text">${settings.buttonSymbol}</button>`
                 + keyLabel
                 + `<span class="alibi-bracket">「</span>`
                 + `<span class="alibi-text alibi-auto-decode" id="${id}" data-t="${encodeURIComponent(plain)}"></span>`
@@ -232,16 +241,31 @@ document.addEventListener('click', (e) => {
 
     const targetId = btn.getAttribute('data-target');
     const span = document.getElementById(targetId);
-    if (!span || span.classList.contains('alibi-done')) return;
-
-    btn.classList.add('alibi-btn-used');
+    if (!span) return;
 
     const key = btn.getAttribute('data-key');
+    const fullText = decodeURIComponent(span.getAttribute('data-t') || '');
+
+    // TOGGLE MODE: If already decoded, re-scramble it
+    if (span.classList.contains('alibi-done') || span.classList.contains('alibi-auto-decode')) {
+        debugLog('Re-scrambling block:', key);
+        if (key) unmarkDecoded(key);
+
+        span.classList.remove('alibi-done', 'alibi-auto-decode');
+        span.classList.add('alibi-scrambled');
+        btn.classList.remove('alibi-btn-decoded');
+
+        span.innerHTML = scrambledPreview(fullText);
+        return;
+    }
+
+    // DECODE MODE: proceed with animation
+    debugLog('Decoding block:', key);
     if (key) markDecoded(key);
 
-    const text = decodeURIComponent(span.getAttribute('data-t'));
+    btn.classList.add('alibi-btn-decoded');
     span.classList.remove('alibi-scrambled');
-    scramble(span, text);
+    scramble(span, fullText);
 });
 
 // ── Action buttons ──────────────────────────────────────────────────────────
@@ -258,7 +282,7 @@ function decodeAll() {
         const wrapper = span.closest('.alibi-wrapper');
         const btn = wrapper?.querySelector('.alibi-decode-btn');
         if (btn) {
-            btn.classList.add('alibi-btn-used');
+            btn.classList.add('alibi-btn-decoded');
             const key = btn.getAttribute('data-key');
             if (key) markDecoded(key);
         }
