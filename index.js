@@ -162,12 +162,14 @@ function scrambledPreview(text) {
 
 // ── Replace 「」 blocks with decode button + scrambled text ────────────────────
 function injectButtons(mesText) {
-    if (!mesText || mesText.dataset.alibiProcessed) return;
+    if (!mesText) return;
 
     const original = mesText.innerHTML;
-    if (!original.includes('「')) return;
+    if (!original.includes('「')) {
+        mesText.dataset.alibiLastHtml = original; // Still track it to prevent constant re-checking
+        return;
+    }
 
-    mesText.dataset.alibiProcessed = '1';
     const decoded = getDecoded();
     const settings = getSettings();
     let blockIndex = 0;
@@ -216,11 +218,12 @@ function injectButtons(mesText) {
     });
 
     if (replaced === original) {
-        delete mesText.dataset.alibiProcessed;
+        mesText.dataset.alibiLastHtml = original;
         return;
     }
 
     mesText.innerHTML = replaced;
+    mesText.dataset.alibiLastHtml = mesText.innerHTML; // Mark the new state as processed
 
     // Trigger animations for auto-decode spans
     mesText.querySelectorAll('.alibi-auto-decode[data-t]').forEach((span, i) => {
@@ -292,15 +295,9 @@ function decodeAll() {
 function rescrambleAll() {
     debugLog('Re-scramble All triggered');
     clearAllDecoded();
-    // Remove processing markers so injectButtons can re-run
-    document.querySelectorAll('.mes_text[data-alibi-processed]').forEach(mt => {
-        delete mt.dataset.alibiProcessed;
-        // Restore original content by getting it fresh from the DOM
-        // The simplest approach: just reload the page state
-    });
-    // Re-process all messages
+    // Re-process all messages by clearing their last HTML state
     document.querySelectorAll('.mes_text').forEach(mt => {
-        delete mt.dataset.alibiProcessed;
+        delete mt.dataset.alibiLastHtml;
     });
     // We need to reload to get the original innerHTML back since we've modified it
     // The cleanest approach is to notify the user
@@ -321,7 +318,7 @@ function clearSavedState() {
 const settleTimers = new Map();
 
 function handleMessage(mesText) {
-    if (!mesText || mesText.dataset.alibiProcessed) return;
+    if (!mesText) return;
 
     if (settleTimers.has(mesText)) {
         clearTimeout(settleTimers.get(mesText));
@@ -329,7 +326,6 @@ function handleMessage(mesText) {
 
     const timer = setTimeout(() => {
         settleTimers.delete(mesText);
-        if (mesText.dataset.alibiProcessed) return;
 
         const mes = mesText.closest('.mes');
         if (mes && (mes.classList.contains('streaming') || mes.querySelector('.typing-indicator'))) {
@@ -337,7 +333,10 @@ function handleMessage(mesText) {
             return;
         }
 
-        injectButtons(mesText);
+        const currentHtml = mesText.innerHTML;
+        if (mesText.dataset.alibiLastHtml !== currentHtml) {
+            injectButtons(mesText);
+        }
     }, 500);
 
     settleTimers.set(mesText, timer);
