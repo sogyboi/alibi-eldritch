@@ -174,7 +174,8 @@ function injectButtons(mesText) {
     const settings = getSettings();
     let blockIndex = 0;
 
-    const replaced = original.replace(/「([^」]*)」/g, (_, inner) => {
+    // Use negative lookbehind to ensure we don't match brackets we already injected
+    const replaced = original.replace(/(?<!class="alibi-bracket">)「([^」]*)」/g, (_, inner) => {
         const tmp = document.createElement('div');
         tmp.innerHTML = inner;
         const plain = tmp.textContent || '';
