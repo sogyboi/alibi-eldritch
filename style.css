@@ -46,6 +46,48 @@
     display: none;
 }
 
+/* ── Message-level decode button ── */
+.alibi-message-decode-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 6px;
+    margin-left: 8px;
+    border: 1px solid #7c3aed;
+    border-radius: 4px;
+    background: rgba(124, 58, 237, 0.15);
+    color: #a78bfa;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    vertical-align: middle;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+}
+
+.alibi-message-decode-btn:hover {
+    background: rgba(124, 58, 237, 0.4);
+    color: #c4b5fd;
+    box-shadow: 0 0 8px rgba(124, 58, 237, 0.5);
+}
+
+.alibi-message-decode-btn:active {
+    transform: scale(0.95);
+}
+
+.alibi-message-btn-decoded {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+}
+
+.alibi-message-btn-decoded:hover {
+    background: rgba(16, 185, 129, 0.4);
+    color: #6ee7b7;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
 /* Wrapper to keep button + text inline */
 .alibi-wrapper {
     display: inline;

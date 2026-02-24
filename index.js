@@ -232,7 +232,30 @@ function injectButtons(mesText) {
         setTimeout(() => scramble(span, text), i * 280 + 380);
     });
 
+    // Inject message-level decode button
+    injectMessageDecodeButton(mesText);
+
     debugLog('Injected buttons into message');
+}
+
+function injectMessageDecodeButton(mesText) {
+    const mes = mesText.closest('.mes');
+    if (!mes) return;
+
+    // Check if the message button already exists
+    if (mes.querySelector('.alibi-message-decode-btn')) return;
+
+    // Get the name container or message block to append the button
+    const nameExt = mes.querySelector('.name_text');
+    if (!nameExt) return;
+
+    const messageDecodeBtn = document.createElement('button');
+    messageDecodeBtn.className = 'alibi-message-decode-btn';
+    messageDecodeBtn.title = 'Decode all eldritch text in this message';
+    messageDecodeBtn.textContent = 'Decode Message';
+
+    // Append the button next to the character name
+    nameExt.appendChild(messageDecodeBtn);
 }
 
 // ── Handle decode button clicks (event delegation) ──────────────────────────
@@ -270,6 +293,40 @@ document.addEventListener('click', (e) => {
     btn.classList.add('alibi-btn-decoded');
     span.classList.remove('alibi-scrambled');
     scramble(span, fullText);
+});
+
+// ── Handle message-level decode button clicks ────────────────────────────────
+document.addEventListener('click', (e) => {
+    const messageBtn = e.target.closest('.alibi-message-decode-btn');
+    if (!messageBtn) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const mes = messageBtn.closest('.mes');
+    if (!mes) return;
+
+    const isDecoded = messageBtn.classList.contains('alibi-message-btn-decoded');
+
+    if (isDecoded) {
+        // Rescramble all in message
+        messageBtn.classList.remove('alibi-message-btn-decoded');
+        messageBtn.textContent = 'Decode Message';
+
+        mes.querySelectorAll('.alibi-decode-btn.alibi-btn-decoded').forEach(btn => {
+            btn.click(); // Trigger individual rescramble
+        });
+    } else {
+        // Decode all in message
+        messageBtn.classList.add('alibi-message-btn-decoded');
+        messageBtn.textContent = 'Rescramble Message';
+
+        mes.querySelectorAll('.alibi-decode-btn:not(.alibi-btn-decoded)').forEach((btn, index) => {
+            setTimeout(() => {
+                btn.click(); // Trigger individual decode with stagger
+            }, index * 150);
+        });
+    }
 });
 
 // ── Action buttons ──────────────────────────────────────────────────────────
